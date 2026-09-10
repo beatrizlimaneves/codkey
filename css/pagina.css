@@ -1,0 +1,104 @@
+/* --- Configurações Globais --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f4f6f9; /* Fundo acinzentado claro */
+    color: #333;
+}
+
+/* --- Barra de Navegação (Navbar) --- */
+.navbar {
+    background-color: #191735fd; /* Azul escuro quase preto */
+    padding: 15px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.brand {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand i {
+    color: #f39c12; /* Cor dourada/alaranjada do logo */
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 15px;
+}
+
+.nav-links a {
+    color: #a0a5b5; /* Texto cinza claro para links inativos */
+    text-decoration: none;
+    font-size: 12px;
+    transition: color 0.2s;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    color: #ffffff; /* Destaque ao passar o mouse ou ativo */
+}
+
+/* --- Conteúdo Principal --- */
+.container {
+    padding: 40px;
+    max-width: 1200px;
+}
+
+.page-title {
+    font-size: 20px;
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* --- Grid de Cartões (Cards) --- */
+.cards-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 25px;
+    width: 180px;
+    height: 120px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Sombra leve */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+/* Cores específicas para os ícones */
+.card-header .blue-icon { color: #3182ce; }
+.card-header .orange-icon { color: #dd6b20; }
+.card-header .teal-icon { color: #319795; }
+
+.card-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #1a202c;
+}
+

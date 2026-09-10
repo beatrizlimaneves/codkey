@@ -1,0 +1,91 @@
+/* Reset básico para limpar margens padrão */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Estilização do fundo da página */
+body {
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+}
+
+/* Cria um card centralizado para o formulário */
+.form-container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Estilização dos títulos (Email e Senha) */
+h1 {
+    font-size: 1rem;
+    color: #333333;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+/* Estilização dos campos de texto */
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+/* Efeito ao clicar no campo de entrada */
+input[type="text"]:focus, input[type="password"]:focus {
+    border-color: #007bff;
+}
+
+/* Transforma o link "Entrar" em um botão destacado */
+.btn-submit {
+    display: block;
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    padding: 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #0056b3;
+}
+
+/* Estilização do link "Não tem cadastro?" */
+.link-cadastro {
+    display: block;
+    text-align: center;
+    color: #666666;
+    font-size: 0.9rem;
+    text-decoration: none;
+    margin-top: 15px;
+}
+
+.link-cadastro:hover {
+    text-decoration: underline;
+    color: #007bff;
+}
+
+
+
+
