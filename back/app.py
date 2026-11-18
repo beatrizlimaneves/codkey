@@ -1,20 +1,30 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from database import conectar, criar_banco
 import os
 
-app = Flask(__name__)
+# Define os caminhos corretos das pastas no projeto
+PASTA_BACK = os.path.dirname(os.path.abspath(__file__))
+PASTA_PROJETO = os.path.abspath(os.path.join(PASTA_BACK, ".."))
+PASTA_HTML = os.path.join(PASTA_PROJETO, "html")
+
+# Garante que o banco academia.db seja criado/lido dentro da pasta 'back'
+os.chdir(PASTA_BACK)
+
+app = Flask(__name__, static_folder=PASTA_PROJETO, static_url_path="")
 CORS(app)
 
 # Cria o banco e as tabelas quando o servidor inicia
 criar_banco()
 
 
+# =========================
+# ROTAS DO SITE (HTML / CSS / ASSETS)
+# =========================
+
 @app.route("/")
 def inicio():
-    return jsonify({
-        "mensagem": "API Academia das Maravilhas funcionando!"
-    })
+    return send_from_directory(PASTA_HTML, "paginainicial.html")
 
 
 @app.route("/api/teste", methods=["GET"])
@@ -382,5 +392,18 @@ def cadastrar_treino():
     }), 201
 
 
+# =========================
+# ENTREGA DAS DEMAIS PÁGINAS HTML, CSS E IMAGENS
+# (Deve ficar sempre no final para não bloquear as rotas /api/...)
+# =========================
+
+@app.route("/<path:caminho>")
+def servir_arquivos(caminho):
+    if caminho.endswith(".html"):
+        return send_from_directory(PASTA_HTML, caminho)
+    return send_from_directory(PASTA_PROJETO, caminho)
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    porta = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=porta)
