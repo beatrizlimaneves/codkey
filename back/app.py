@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 from database import conectar, criar_banco
 import os
 
@@ -52,12 +53,13 @@ def cadastro():
             "erro": "Nome, email e senha são obrigatórios."
         }), 400
 
+    senha_criptografada = generate_password_hash(senha)
     conexao = conectar()
 
     try:
         conexao.execute(
             "INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)",
-            (nome, email, senha)
+            (nome, email, senha_criptografada)
         )
         conexao.commit()
 
@@ -93,22 +95,27 @@ def login():
 
     conexao = conectar()
 
-    usuario = conexao.execute(
-        "SELECT id, nome, email FROM usuarios WHERE email = ? AND senha = ?",
-        (email, senha)
-    ).fetchone()
+    try:
+        usuario = conexao.execute(
+            "SELECT id, nome, email, senha FROM usuarios WHERE email = ?",
+            (email,)
+        ).fetchone()
 
-    conexao.close()
+        if not usuario or not check_password_hash(usuario["senha"], senha):
+            return jsonify({
+                "erro": "Email ou senha incorretos."
+            }), 401
 
-    if not usuario:
         return jsonify({
-            "erro": "Email ou senha incorretos."
-        }), 401
-
-    return jsonify({
-        "mensagem": "Login realizado com sucesso!",
-        "usuario": dict(usuario)
-    })
+            "mensagem": "Login realizado com sucesso!",
+            "usuario": {
+                "id": usuario["id"],
+                "nome": usuario["nome"],
+                "email": usuario["email"]
+            }
+        })
+    finally:
+        conexao.close()
 
 
 # =========================
@@ -118,14 +125,13 @@ def login():
 @app.route("/api/alunos", methods=["GET"])
 def listar_alunos():
     conexao = conectar()
-
-    alunos = conexao.execute(
-        "SELECT * FROM alunos ORDER BY id DESC"
-    ).fetchall()
-
-    conexao.close()
-
-    return jsonify([dict(aluno) for aluno in alunos])
+    try:
+        alunos = conexao.execute(
+            "SELECT * FROM alunos ORDER BY id DESC"
+        ).fetchall()
+        return jsonify([dict(aluno) for aluno in alunos])
+    finally:
+        conexao.close()
 
 
 @app.route("/api/alunos", methods=["POST"])
@@ -143,45 +149,45 @@ def cadastrar_aluno():
         }), 400
 
     conexao = conectar()
+    try:
+        cursor = conexao.execute(
+            """
+            INSERT INTO alunos (nome, email, telefone, idade)
+            VALUES (?, ?, ?, ?)
+            """,
+            (nome, email, telefone, idade)
+        )
+        conexao.commit()
+        aluno_id = cursor.lastrowid
 
-    cursor = conexao.execute(
-        """
-        INSERT INTO alunos (nome, email, telefone, idade)
-        VALUES (?, ?, ?, ?)
-        """,
-        (nome, email, telefone, idade)
-    )
-
-    conexao.commit()
-    aluno_id = cursor.lastrowid
-    conexao.close()
-
-    return jsonify({
-        "mensagem": "Aluno cadastrado com sucesso!",
-        "id": aluno_id
-    }), 201
+        return jsonify({
+            "mensagem": "Aluno cadastrado com sucesso!",
+            "id": aluno_id
+        }), 201
+    finally:
+        conexao.close()
 
 
 @app.route("/api/alunos/<int:id>", methods=["DELETE"])
 def excluir_aluno(id):
     conexao = conectar()
+    try:
+        cursor = conexao.execute(
+            "DELETE FROM alunos WHERE id = ?",
+            (id,)
+        )
+        conexao.commit()
 
-    cursor = conexao.execute(
-        "DELETE FROM alunos WHERE id = ?",
-        (id,)
-    )
+        if cursor.rowcount == 0:
+            return jsonify({
+                "erro": "Aluno não encontrado."
+            }), 404
 
-    conexao.commit()
-    conexao.close()
-
-    if cursor.rowcount == 0:
         return jsonify({
-            "erro": "Aluno não encontrado."
-        }), 404
-
-    return jsonify({
-        "mensagem": "Aluno excluído com sucesso!"
-    })
+            "mensagem": "Aluno excluído com sucesso!"
+        })
+    finally:
+        conexao.close()
 
 
 # =========================
@@ -191,14 +197,13 @@ def excluir_aluno(id):
 @app.route("/api/planos", methods=["GET"])
 def listar_planos():
     conexao = conectar()
-
-    planos = conexao.execute(
-        "SELECT * FROM planos ORDER BY id DESC"
-    ).fetchall()
-
-    conexao.close()
-
-    return jsonify([dict(plano) for plano in planos])
+    try:
+        planos = conexao.execute(
+            "SELECT * FROM planos ORDER BY id DESC"
+        ).fetchall()
+        return jsonify([dict(plano) for plano in planos])
+    finally:
+        conexao.close()
 
 
 @app.route("/api/planos", methods=["POST"])
@@ -222,23 +227,23 @@ def cadastrar_plano():
         }), 400
 
     conexao = conectar()
+    try:
+        cursor = conexao.execute(
+            """
+            INSERT INTO planos (nome, preco, descricao)
+            VALUES (?, ?, ?)
+            """,
+            (nome, preco, descricao)
+        )
+        conexao.commit()
+        plano_id = cursor.lastrowid
 
-    cursor = conexao.execute(
-        """
-        INSERT INTO planos (nome, preco, descricao)
-        VALUES (?, ?, ?)
-        """,
-        (nome, preco, descricao)
-    )
-
-    conexao.commit()
-    plano_id = cursor.lastrowid
-    conexao.close()
-
-    return jsonify({
-        "mensagem": "Plano cadastrado com sucesso!",
-        "id": plano_id
-    }), 201
+        return jsonify({
+            "mensagem": "Plano cadastrado com sucesso!",
+            "id": plano_id
+        }), 201
+    finally:
+        conexao.close()
 
 
 # =========================
@@ -248,25 +253,24 @@ def cadastrar_plano():
 @app.route("/api/pagamentos", methods=["GET"])
 def listar_pagamentos():
     conexao = conectar()
-
-    pagamentos = conexao.execute(
-        """
-        SELECT
-            pagamentos.id,
-            pagamentos.aluno_id,
-            alunos.nome AS aluno,
-            pagamentos.valor,
-            pagamentos.data,
-            pagamentos.status
-        FROM pagamentos
-        INNER JOIN alunos ON alunos.id = pagamentos.aluno_id
-        ORDER BY pagamentos.id DESC
-        """
-    ).fetchall()
-
-    conexao.close()
-
-    return jsonify([dict(pagamento) for pagamento in pagamentos])
+    try:
+        pagamentos = conexao.execute(
+            """
+            SELECT
+                pagamentos.id,
+                pagamentos.aluno_id,
+                alunos.nome AS aluno,
+                pagamentos.valor,
+                pagamentos.data,
+                pagamentos.status
+            FROM pagamentos
+            INNER JOIN alunos ON alunos.id = pagamentos.aluno_id
+            ORDER BY pagamentos.id DESC
+            """
+        ).fetchall()
+        return jsonify([dict(pagamento) for pagamento in pagamentos])
+    finally:
+        conexao.close()
 
 
 @app.route("/api/pagamentos", methods=["POST"])
@@ -291,34 +295,33 @@ def cadastrar_pagamento():
         }), 400
 
     conexao = conectar()
+    try:
+        aluno = conexao.execute(
+            "SELECT id FROM alunos WHERE id = ?",
+            (aluno_id,)
+        ).fetchone()
 
-    aluno = conexao.execute(
-        "SELECT id FROM alunos WHERE id = ?",
-        (aluno_id,)
-    ).fetchone()
+        if not aluno:
+            return jsonify({
+                "erro": "Aluno não encontrado."
+            }), 404
 
-    if not aluno:
-        conexao.close()
+        cursor = conexao.execute(
+            """
+            INSERT INTO pagamentos (aluno_id, valor, data, status)
+            VALUES (?, ?, ?, ?)
+            """,
+            (aluno_id, valor, data, status)
+        )
+        conexao.commit()
+        pagamento_id = cursor.lastrowid
+
         return jsonify({
-            "erro": "Aluno não encontrado."
-        }), 404
-
-    cursor = conexao.execute(
-        """
-        INSERT INTO pagamentos (aluno_id, valor, data, status)
-        VALUES (?, ?, ?, ?)
-        """,
-        (aluno_id, valor, data, status)
-    )
-
-    conexao.commit()
-    pagamento_id = cursor.lastrowid
-    conexao.close()
-
-    return jsonify({
-        "mensagem": "Pagamento cadastrado com sucesso!",
-        "id": pagamento_id
-    }), 201
+            "mensagem": "Pagamento cadastrado com sucesso!",
+            "id": pagamento_id
+        }), 201
+    finally:
+        conexao.close()
 
 
 # =========================
@@ -328,24 +331,23 @@ def cadastrar_pagamento():
 @app.route("/api/treinos", methods=["GET"])
 def listar_treinos():
     conexao = conectar()
-
-    treinos = conexao.execute(
-        """
-        SELECT
-            treinos.id,
-            treinos.aluno_id,
-            alunos.nome AS aluno,
-            treinos.nome,
-            treinos.descricao
-        FROM treinos
-        INNER JOIN alunos ON alunos.id = treinos.aluno_id
-        ORDER BY treinos.id DESC
-        """
-    ).fetchall()
-
-    conexao.close()
-
-    return jsonify([dict(treino) for treino in treinos])
+    try:
+        treinos = conexao.execute(
+            """
+            SELECT
+                treinos.id,
+                treinos.aluno_id,
+                alunos.nome AS aluno,
+                treinos.nome,
+                treinos.descricao
+            FROM treinos
+            INNER JOIN alunos ON alunos.id = treinos.aluno_id
+            ORDER BY treinos.id DESC
+            """
+        ).fetchall()
+        return jsonify([dict(treino) for treino in treinos])
+    finally:
+        conexao.close()
 
 
 @app.route("/api/treinos", methods=["POST"])
@@ -362,48 +364,37 @@ def cadastrar_treino():
         }), 400
 
     conexao = conectar()
+    try:
+        aluno = conexao.execute(
+            "SELECT id FROM alunos WHERE id = ?",
+            (aluno_id,)
+        ).fetchone()
 
-    aluno = conexao.execute(
-        "SELECT id FROM alunos WHERE id = ?",
-        (aluno_id,)
-    ).fetchone()
+        if not aluno:
+            return jsonify({
+                "erro": "Aluno não encontrado."
+            }), 404
 
-    if not aluno:
-        conexao.close()
+        cursor = conexao.execute(
+            """
+            INSERT INTO treinos (aluno_id, nome, descricao)
+            VALUES (?, ?, ?)
+            """,
+            (aluno_id, nome, descricao)
+        )
+        conexao.commit()
+        treino_id = cursor.lastrowid
+
         return jsonify({
-            "erro": "Aluno não encontrado."
-        }), 404
-
-    cursor = conexao.execute(
-        """
-        INSERT INTO treinos (aluno_id, nome, descricao)
-        VALUES (?, ?, ?)
-        """,
-        (aluno_id, nome, descricao)
-    )
-
-    conexao.commit()
-    treino_id = cursor.lastrowid
-    conexao.close()
-
-    return jsonify({
-        "mensagem": "Treino cadastrado com sucesso!",
-        "id": treino_id
-    }), 201
+            "mensagem": "Treino cadastrado com sucesso!",
+            "id": treino_id
+        }), 201
+    finally:
+        conexao.close()
 
 
 # =========================
-# ENTREGA DAS DEMAIS PÁGINAS HTML, CSS E IMAGENS
-# (Deve ficar sempre no final para não bloquear as rotas /api/...)
+# INICIALIZAÇÃO DO SERVIDOR
 # =========================
-
-@app.route("/<path:caminho>")
-def servir_arquivos(caminho):
-    if caminho.endswith(".html"):
-        return send_from_directory(PASTA_HTML, caminho)
-    return send_from_directory(PASTA_PROJETO, caminho)
-
 
 if __name__ == "__main__":
-    porta = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=porta)
