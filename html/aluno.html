@@ -1,53 +1,35 @@
 <script>
-  // Carrega a lista de alunos assim que a página abre
-  async function carregarAlunos() {
-    try {
-      const resposta = await fetch("/api/alunos");
-      const alunos = await resposta.json();
-      const tabela = document.querySelector("tbody");
-      tabela.innerHTML = "";
+  document.querySelector("form").addEventListener("submit", async function(evento) {
+    evento.preventDefault();
 
-      if (alunos.length === 0) {
-        tabela.innerHTML = `<tr><td colspan="7">Nenhum aluno cadastrado.</td></tr>`;
-        return;
-      }
-
-      alunos.forEach(aluno => {
-        tabela.innerHTML += `
-          <tr>
-            <td>${aluno.id}</td>
-            <td>${aluno.nome}</td>
-            <td>${aluno.email || "-"}</td>
-            <td>${aluno.telefone || "-"}</td>
-            <td>${aluno.plano || "-"}</td>
-            <td>${aluno.status || "Ativo"}</td>
-            <td>
-              <button onclick="excluirAluno(${aluno.id})">Excluir</button>
-            </td>
-          </tr>
-        `;
-      });
-    } catch (erro) {
-      console.error("Erro ao carregar alunos:", erro);
-    }
-  }
-
-  // Exclui um aluno pelo ID
-  async function excluirAluno(id) {
-    if (!confirm("Deseja realmente excluir este aluno?")) return;
+    // Pega os valores dos campos (confira se os IDs batem com os seus inputs)
+    const aluno = {
+      nome: document.getElementById("nome").value,
+      email: document.getElementById("email").value,
+      telefone: document.getElementById("telefone").value,
+      idade: document.getElementById("idade") ? document.getElementById("idade").value : null
+    };
 
     try {
-      const resposta = await fetch(`/api/alunos/${id}`, {
-        method: "DELETE"
+      const resposta = await fetch("/api/alunos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(aluno)
       });
+
+      const dados = await resposta.json();
+
       if (resposta.ok) {
-        carregarAlunos();
+        alert("Aluno cadastrado com sucesso!");
+        window.location.href = "aluno.html";
+      } else {
+        alert("Erro: " + (dados.erro || "Não foi possível cadastrar."));
       }
     } catch (erro) {
-      alert("Erro ao excluir aluno.");
+      alert("Erro de conexão ao tentar cadastrar o aluno.");
+      console.error(erro);
     }
-  }
-
-  carregarAlunos();
+  });
 </script>
-
