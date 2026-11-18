@@ -1,58 +1,53 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AcademiaFit - Alunos</title>
-    <!-- Vinculando o arquivo CSS externo -->
-    <link rel="stylesheet" href="../css/alunos.css">
-</head>
-<body>
+<script>
+  // Carrega a lista de alunos assim que a página abre
+  async function carregarAlunos() {
+    try {
+      const resposta = await fetch("/api/alunos");
+      const alunos = await resposta.json();
+      const tabela = document.querySelector("tbody");
+      tabela.innerHTML = "";
 
-    <!-- BARRA DE NAVEGAÇÃO -->
-    <nav class="navbar">
-        <div class="logo-container">
-            <span class="logo-icon">🏋️</span>
-            <span class="brand-name">AcademiaFit</span>
-        </div>
-        <ul class="nav-links">
-            <li><a href="paginainicial.html">Dashboard</a></li>
-            <li><a href="aluno.html" class="active">Alunos</a></li>
-            <li><a href="prof.html">Professores</a></li>
-            <li><a href="planos.html">Planos</a></li>
-            <li><a href="pagamentos.html">Pagamentos</a></li>
-            <li><a href="treino.html">Treinos</a></li>
-        </ul>
-    </nav>
+      if (alunos.length === 0) {
+        tabela.innerHTML = `<tr><td colspan="7">Nenhum aluno cadastrado.</td></tr>`;
+        return;
+      }
 
-    <!-- CONTEÚDO DA PÁGINA -->
-    <main class="main-container">
-        <div class="header-actions">
-            <h1 class="title">Alunos</h1>
-            <button class="btn-add">+ Novo aluno</button>
-        </div>
+      alunos.forEach(aluno => {
+        tabela.innerHTML += `
+          <tr>
+            <td>${aluno.id}</td>
+            <td>${aluno.nome}</td>
+            <td>${aluno.email || "-"}</td>
+            <td>${aluno.telefone || "-"}</td>
+            <td>${aluno.plano || "-"}</td>
+            <td>${aluno.status || "Ativo"}</td>
+            <td>
+              <button onclick="excluirAluno(${aluno.id})">Excluir</button>
+            </td>
+          </tr>
+        `;
+      });
+    } catch (erro) {
+      console.error("Erro ao carregar alunos:", erro);
+    }
+  }
 
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>E-mail</th>
-                        <th>Telefone</th>
-                        <th>Plano</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colspan="7" class="empty-message">Nenhum aluno cadastrado.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </main>
+  // Exclui um aluno pelo ID
+  async function excluirAluno(id) {
+    if (!confirm("Deseja realmente excluir este aluno?")) return;
 
-</body>
-</html>
+    try {
+      const resposta = await fetch(`/api/alunos/${id}`, {
+        method: "DELETE"
+      });
+      if (resposta.ok) {
+        carregarAlunos();
+      }
+    } catch (erro) {
+      alert("Erro ao excluir aluno.");
+    }
+  }
+
+  carregarAlunos();
+</script>
+
