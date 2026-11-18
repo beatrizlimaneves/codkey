@@ -1,30 +1,84 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/login.css">
-    <title>cadastro</title>-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrar | AcademiaFit</title>
+  <link rel="stylesheet" href="../css/tema-roxo.css">
+  <link rel="stylesheet" href="../css/login.css">
 </head>
 <body>
 
-    <!-- Caixa branca que centraliza o formulário -->
-    <div class="form-container">
-     
-        <h1>Email:</h1>
-        <input type="text" placeholder="Digite seu email">
-        
-        <h1>Senha:</h1>
-        <!-- Alterado para "password" para esconder os caracteres digitados -->
-        <input type="password" placeholder="Digite sua senha">
-        
-        <!-- O link de entrar agora se comporta como um botão -->
-        <a href="index.html" class="btn-submit">Entrar</a>
-        
-        <a href="cadastro.html" class="link-cadastro">Não tem cadastro?</a>
-        
+  <div class="login-wrapper">
+    <!-- Lado esquerdo: Identidade visual -->
+    <div class="login-brand">
+      <img src="../assets/academiafit-logo.png" alt="Logo AcademiaFit" class="brand-logo">
+      <p class="brand-tags">SAÚDE • DISCIPLINA • RESULTADOS</p>
+      <h1>Seu próximo nível começa aqui.</h1>
+      <p class="brand-subtitle">Organize sua academia, acompanhe seus alunos e transforme esforço em resultado.</p>
     </div>
 
-</body>
+    <!-- Lado direito: Formulário de login -->
+    <div class="login-card">
+      <img src="../assets/academiafit-logo.png" alt="Logo AcademiaFit" class="card-logo">
+      <span class="badge">ÁREA EXCLUSIVA</span>
+      <h2>Bem-vindo de volta!</h2>
+      <p class="subtitle">Entre com seus dados para acessar o painel.</p>
 
+      <form id="formLogin">
+        <div class="input-group">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" placeholder="seuemail@exemplo.com" required>
+        </div>
+
+        <div class="input-group">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn-primary">Entrar no sistema →</button>
+        <p id="mensagemErro" style="color: #d93025; margin-top: 12px; font-size: 14px;"></p>
+      </form>
+
+      <p class="footer-link">
+        Primeiro acesso? <a href="cadastro.html">Criar uma conta</a>
+      </p>
+      <p class="security-note">🔒 Acesso protegido por e-mail e senha</p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("formLogin").addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+      const msgErro = document.getElementById("mensagemErro");
+      msgErro.textContent = "";
+
+      try {
+        const resposta = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, senha })
+        });
+
+        const dados = await resposta.json();
+
+        if (resposta.ok) {
+          localStorage.setItem("usuarioLogado", JSON.stringify(dados.usuario));
+          window.location.href = "paginainicial.html";
+        } else {
+          msgErro.textContent = dados.erro || "E-mail ou senha incorretos.";
+        }
+      } catch (erro) {
+        msgErro.textContent = "Erro de conexão com o servidor. Tente novamente.";
+        console.error(erro);
+      }
+    });
+  </script>
+
+</body>
 </html>
