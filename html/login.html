@@ -10,7 +10,6 @@
 <body>
 
   <div class="login-wrapper">
-    <!-- Lado esquerdo: Identidade visual -->
     <div class="login-brand">
       <img src="../assets/academiafit-logo.png" alt="Logo AcademiaFit" class="brand-logo">
       <p class="brand-tags">SAÚDE • DISCIPLINA • RESULTADOS</p>
@@ -18,7 +17,6 @@
       <p class="brand-subtitle">Organize sua academia, acompanhe seus alunos e transforme esforço em resultado.</p>
     </div>
 
-    <!-- Lado direito: Formulário de login -->
     <div class="login-card">
       <img src="../assets/academiafit-logo.png" alt="Logo AcademiaFit" class="card-logo">
       <span class="badge">ÁREA EXCLUSIVA</span>
@@ -51,10 +49,10 @@
     document.getElementById("formLogin").addEventListener("submit", async function(event) {
       event.preventDefault();
 
-      const email = document.getElementById("email").value;
+      const email = document.getElementById("email").value.trim();
       const senha = document.getElementById("senha").value;
       const msgErro = document.getElementById("mensagemErro");
-      msgErro.textContent = "";
+      msgErro.textContent = "Verificando...";
 
       try {
         const resposta = await fetch("/api/login", {
@@ -74,7 +72,7 @@
           msgErro.textContent = dados.erro || "E-mail ou senha incorretos.";
         }
       } catch (erro) {
-        msgErro.textContent = "Erro de conexão com o servidor. Tente novamente.";
+        msgErro.textContent = "Falha de conexão com o servidor (Failed to fetch).";
         console.error(erro);
       }
     });
